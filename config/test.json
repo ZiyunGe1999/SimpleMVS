@@ -1,0 +1,5 @@
+{
+    "ImageDir": "<PATH/TO/IMAGE_DIR>",
+    "PoseFile": "<PATH/TO/POSEFILE>",
+    "CamCalibration": "<PATH/TO/CAMCALIBRATION>"
+}
