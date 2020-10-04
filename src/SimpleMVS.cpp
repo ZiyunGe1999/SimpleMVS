@@ -1,21 +1,26 @@
 #include<iostream>
 #include"jsonReader.hpp"
+#include <glog/logging.h>
 
 int main(int argc, char** argv){
 
+    // Initialize Google’s logging library.
+    google::InitGoogleLogging(argv[0]);
+
     if(argc != 2){
-        std::cout << "Usage: ./bin/SimpleMVS <PATH/TO/CONFIG/FILE>" << std::endl;
+        LOG(FATAL) << "Usage: ./bin/SimpleMVS <PATH/TO/CONFIG/FILE>";
+        // std::cout << "Usage: ./bin/SimpleMVS <PATH/TO/CONFIG/FILE>" << std::endl;
         return 0;
     }
 
     std::string pathToConfig = argv[1];
-    std::cout << "Loading File at " << pathToConfig << std::endl;
+    LOG(INFO) << "Loading File at " << pathToConfig;
     jsonFileReader configFileReader(pathToConfig);
-    std::cout << "Loaded JSON File Successfully!!!" << std::endl;
+    LOG(INFO) << "Loaded JSON File Successfully!!!";
 
-    std::cout << "The Image Directory is at " << configFileReader.getImageDirPath() << std::endl;
-    std::cout << "The Pose File is at " << configFileReader.getPoseFilePath() << std::endl;
-    std::cout << "The Image Directory is at " << configFileReader.getCameraCalibrationFilePath() << std::endl;
+    LOG(INFO) << "The Image Directory is at " << configFileReader.getImageDirPath();
+    LOG(INFO) << "The Pose File is at " << configFileReader.getPoseFilePath();
+    LOG(INFO) << "The Image Directory is at " << configFileReader.getCameraCalibrationFilePath();
 
     return 0;
 }

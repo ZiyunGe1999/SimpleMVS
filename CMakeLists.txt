@@ -5,6 +5,10 @@ project(SimpleMVS)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
+find_package (glog 0.4.0 REQUIRED)
+
+# message(STATUS "glog is at " ${GLOG_LIB_DIRS})
+
 set(JSON_LIB_PATH Thirdparty/jsoncpp/dist)
 
 add_library(json SHARED
@@ -23,4 +27,5 @@ ADD_EXECUTABLE(SimpleMVS_run
 
 target_link_libraries(SimpleMVS_run
     json
+    glog::glog
 )

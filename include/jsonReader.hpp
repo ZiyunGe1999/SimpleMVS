@@ -5,6 +5,7 @@
 #include<iostream>
 #include <string>
 #include <fstream>
+#include <glog/logging.h>
 
 class jsonFileReader{
     private:

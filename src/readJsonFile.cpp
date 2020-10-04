@@ -16,11 +16,12 @@ Json::Value jsonFileReader::JsonParser(const std::string fileName){
     if(InFile){
         // Parser.parse(InFile, Root);
         Json::parseFromStream(Parser, InFile, &Root, &errors);
+        InFile.close();
     }
     else{
-        std::cout << "ERROR: didn't find file at " << fileName << std::endl;
+        InFile.close();
+        LOG(FATAL) << "ERROR: didn't find file at " << fileName;
     }
-    InFile.close();
 
     return Root;
 }
