@@ -1,0 +1,5 @@
+{
+    "ImageDir": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/botanical_garden/images/dslr_images_undistorted",
+    "PoseFile": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/botanical_garden/dslr_calibration_undistorted/images.txt",
+    "CamCalibration": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/botanical_garden/dslr_calibration_undistorted/cameras.txt"
+}
