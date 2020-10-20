@@ -25,6 +25,8 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+#ifndef IMAGES_HPP
+#define IMAGES_HPP
 
 #include <cstring>
 #include <memory>
@@ -89,3 +91,5 @@ typedef std::unordered_map<int, ColmapImagePtr> ColmapImagePtrMap;
 bool ReadColmapImages(const std::string& images_txt_path,
                       bool read_observations,
                       ColmapImagePtrMap* cameras);
+
+#endif
