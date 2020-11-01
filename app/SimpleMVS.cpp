@@ -1,8 +1,9 @@
-#include<iostream>
-#include"jsonReader.hpp"
-#include"images.hpp"
-#include"cameras.hpp"
+#include <iostream>
+#include "jsonReader.hpp"
+#include "images.hpp"
+#include "cameras.hpp"
 #include <glog/logging.h>
+#include "MVSProcess.hpp"
 
 int main(int argc, char** argv){
 
@@ -15,18 +16,22 @@ int main(int argc, char** argv){
         return 0;
     }
 
-    std::string pathToConfig = argv[1];
-    LOG(INFO) << "Loading File at " << pathToConfig;
-    jsonFileReader configFileReader(pathToConfig);
+    std::string path_to_Config = argv[1];
+    LOG(INFO) << "Loading File at " << path_to_Config;
+    jsonFileReader config_file_reader(path_to_Config);
     LOG(INFO) << "Loaded JSON File Successfully!!!";
 
-    LOG(INFO) << "The Image Directory is at " << configFileReader.getImageDirPath();
-    LOG(INFO) << "The Pose File is at " << configFileReader.getPoseFilePath();
-    LOG(INFO) << "The Camera Calibration File is at " << configFileReader.getCameraCalibrationFilePath();
+    LOG(INFO) << "The Image Directory is at " << config_file_reader.getImageDirPath();
+    LOG(INFO) << "The Pose File is at " << config_file_reader.getPoseFilePath();
+    LOG(INFO) << "The Camera Calibration File is at " << config_file_reader.getCameraCalibrationFilePath();
+
+    //Get User Set Parameters
+    LOG(INFO) << "Get User Set Parameters";
+    SetParameters set_parameters = config_file_reader.getUserSetParameters();
 
     // Load cameras (indexed by: camera_id).
     ColmapCameraPtrMap cameras;
-    std::string cameras_txt_path = configFileReader.getCameraCalibrationFilePath();
+    std::string cameras_txt_path = config_file_reader.getCameraCalibrationFilePath();
     bool success = ReadColmapCameras(cameras_txt_path, &cameras);
     if (success) {
     LOG(INFO) << "Successfully loaded " << cameras.size() << " camera(s).";
@@ -36,7 +41,7 @@ int main(int argc, char** argv){
 
     // Load images (indexed by: image_id).
     ColmapImagePtrMap images;
-    std::string images_txt_path = configFileReader.getPoseFilePath();
+    std::string images_txt_path = config_file_reader.getPoseFilePath();
     success = ReadColmapImages(images_txt_path, /* read_observations */ true,
                                 &images);
     if (success) {
@@ -44,6 +49,9 @@ int main(int argc, char** argv){
     } else {
     LOG(FATAL) << "Error: could not load image infos." << std::endl;
     }
+
+    //MVS Main Process
+    MVSProcess simple_mvs_process(config_file_reader.getImageDirPath(), set_parameters, cameras);
 
     return 0;
 }

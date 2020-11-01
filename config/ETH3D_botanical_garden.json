@@ -1,5 +1,10 @@
 {
-    "ImageDir": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/botanical_garden/images/dslr_images_undistorted",
+    "ImageDir": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/botanical_garden/images",
     "PoseFile": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/botanical_garden/dslr_calibration_undistorted/images.txt",
-    "CamCalibration": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/botanical_garden/dslr_calibration_undistorted/cameras.txt"
+    "CamCalibration": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/botanical_garden/dslr_calibration_undistorted/cameras.txt",
+
+    "parameters": {
+        "max_z": 40,
+        "min_z": 0.1
+    }
 }

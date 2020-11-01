@@ -1,5 +1,10 @@
 {
     "ImageDir": "<PATH/TO/IMAGE_DIR>",
     "PoseFile": "<PATH/TO/POSEFILE>",
-    "CamCalibration": "<PATH/TO/CAMCALIBRATION>"
+    "CamCalibration": "<PATH/TO/CAMCALIBRATION>",
+
+    "parameters": {
+        "max_z": 40,
+        "min_z": 0.1
+    }
 }

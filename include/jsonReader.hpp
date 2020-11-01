@@ -6,6 +6,7 @@
 #include <string>
 #include <fstream>
 #include <glog/logging.h>
+#include <parameters.hpp>
 
 class jsonFileReader{
     private:
@@ -22,6 +23,7 @@ class jsonFileReader{
         std::string getPoseFilePath();
         std::string getCameraCalibrationFilePath();
         Json::Value JsonParser(const std::string fileName);
+        SetParameters getUserSetParameters();
 
 };
 

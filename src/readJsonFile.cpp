@@ -44,3 +44,10 @@ std::string jsonFileReader::getCameraCalibrationFilePath(){
     std::string cameraCalibrationFilePath = root["CamCalibration"].asString();
     return cameraCalibrationFilePath;
 }
+
+SetParameters jsonFileReader::getUserSetParameters(){
+    SetParameters user_set_parameters;
+    user_set_parameters.max_z_ = root["parameters"]["max_z"].asDouble();
+    user_set_parameters.min_z_ = root["parameters"]["min_z"].asDouble();
+    return user_set_parameters;
+}
