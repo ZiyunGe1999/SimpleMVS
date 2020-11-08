@@ -7,22 +7,21 @@ MVSFrame::MVSFrame(int id, std::string image_root_path, ColmapImagePtrMap &map) 
     global_T_image = image_ptr->global_T_image;
 
     std::string image_file_path = image_ptr->file_path;
+    LOG(INFO) << "Read image " << image_file_path;
     pixels = cv::imread(image_root_path + "/" + image_file_path, cv::IMREAD_COLOR);
     if(pixels.empty()){
         LOG(FATAL) << "Could not read the image: " << image_root_path;
     }
 
     //initialize planes whose size is the same as pixels' size
-    planes.resize(pixels.rows);
-    for(int i=0; i<pixels.rows; i++){
-        planes[i].resize(pixels.cols);
-    }
-
+    planes.resize(pixels.rows, std::vector<MVSPlane>(pixels.cols, MVSPlane()));
 }
 
 MVSProcess::MVSProcess(std::string image_root_path, SetParameters set_parameters, ColmapCameraPtrMap &cameras)
              : image_root_path_(image_root_path), set_parameters_(set_parameters){
     // view_vectors_.resize(cameras.size());
+    LOG(INFO) << "Initialize view vectors. It may take for a while...";
+    clock_t start_time = std::clock();
     for(auto camera : cameras){
         if(camera.second->model_name != "PINHOLE"){
             LOG(FATAL) << "Sorry, the code doesn't support any camera model other than PINHOLE!!!";
@@ -45,6 +44,8 @@ MVSProcess::MVSProcess(std::string image_root_path, SetParameters set_parameters
             }
         }
     }
+    clock_t end_time = std::clock();
+    LOG(INFO) << "View vectors Initialization is down. The elapsed time is " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << " second(s)";
 }
 
 MVSProcess::~MVSProcess(){
@@ -64,10 +65,14 @@ void MVSProcess::updateFrames(int id, ColmapImagePtrMap &map){
         frame_ptr_2 = frame_ptr_3;
         frame_ptr_3.reset(new MVSFrame(id, image_root_path_, map));
     }
+    std::string frame_3_id_str = frame_ptr_3 ? std::to_string(frame_ptr_3->image_id) + " " : "";
+    std::string frame_2_id_str = frame_ptr_2 ? std::to_string(frame_ptr_2->image_id) + " " : "";
+    std::string frame_1_id_str = frame_ptr_1 ? std::to_string(frame_ptr_1->image_id) + " " : "";
+    LOG(INFO) << "Currently, Frame " << frame_3_id_str << frame_2_id_str << frame_1_id_str << " are(is) in the sequence";
 }
 
 Eigen::Vector3d MVSProcess::getViewVector(int camera_id, int row, int col){
-    if(view_vectors_.find(camera_id) != view_vectors_.end()){
+    if(view_vectors_.find(camera_id) == view_vectors_.end()){
         LOG(FATAL) << "Didn't find camera ID " << camera_id;
     }
 
@@ -78,7 +83,12 @@ void MVSProcess::initializePlanes(){
     if(!frame_ptr_3){
         LOG(INFO) << "Frame 3 is empty. Pass...";
     }
+    else{
+        LOG(INFO) << "Initialize depth planes for frame_ptr_3 whose actual image_id is " << frame_ptr_3->image_id;
+    }
 
+    LOG(INFO) << "Plane initialization may take for a while...";
+    clock_t start_time = std::clock();
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> dis_for_z(set_parameters_.min_z_, set_parameters_.max_z_);
@@ -104,4 +114,6 @@ void MVSProcess::initializePlanes(){
 
         }
     }
+    clock_t end_time = std::clock();
+    LOG(INFO) << "Plane Initialization is down. The elapsed time is " << (end_time - start_time) * 1.0 / CLOCKS_PER_SEC << " second(s)";
 }

@@ -52,6 +52,15 @@ int main(int argc, char** argv){
 
     //MVS Main Process
     MVSProcess simple_mvs_process(config_file_reader.getImageDirPath(), set_parameters, cameras);
+    for(auto iter = images.begin(); iter != images.end(); iter++){
+        LOG(INFO) << "=================================================================================";
+        LOG(INFO) << "Update frames for simple mvs process";
+        LOG(INFO) << "Insert frame " << iter->first << " into the process";
+        simple_mvs_process.updateFrames(iter->first, images);
+
+        LOG(INFO) << "---------------------------------------------------------------------------------";
+        simple_mvs_process.initializePlanes();
+    }
 
     return 0;
 }

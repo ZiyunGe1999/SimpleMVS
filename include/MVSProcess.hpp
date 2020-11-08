@@ -11,6 +11,7 @@
 #include "parameters.hpp"
 #include <random>
 #include <math.h>
+#include <ctime>
 
 struct MVSPlane{
     double x = 0;
@@ -31,6 +32,7 @@ class MVSFrame{
         SE3f global_T_image;
     public:
         MVSFrame(int id, std::string image_root_path, ColmapImagePtrMap &map);
+        // ~MVSFrame(){LOG(INFO) << "Deconstruct frame " << image_id;};
 
         
 };

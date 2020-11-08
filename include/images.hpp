@@ -30,7 +30,8 @@
 
 #include <cstring>
 #include <memory>
-#include <unordered_map>
+// #include <unordered_map>
+#include <map>
 #include <vector>
 
 #include <Eigen/Core>
@@ -83,7 +84,9 @@ typedef std::shared_ptr<ColmapImage> ColmapImagePtr;
 typedef std::shared_ptr<const ColmapImage> ColmapImageConstPtr;
 
 typedef std::vector<ColmapImagePtr> ColmapImagePtrVector;
-typedef std::unordered_map<int, ColmapImagePtr> ColmapImagePtrMap;
+// typedef std::unordered_map<int, ColmapImagePtr> ColmapImagePtrMap;
+typedef std::map<int, ColmapImagePtr> ColmapImagePtrMap; //I change unordered_map to map so that we can process according to the image_id order
+
 
 
 // Loads ColmapImagePtr from a COLMAP images.txt file and appends them
