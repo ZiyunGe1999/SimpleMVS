@@ -1,4 +1,4 @@
-# SimpleMVS
+# SimpleMVS (In Development)
 A c++ project for a simple **Multi-View Stereo**(MVS) algorithm based on patch match
 
 ## Dependencies
