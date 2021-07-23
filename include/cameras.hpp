@@ -39,21 +39,21 @@
 
 // Holds data of a COLMAP camera.
 struct ColmapCamera {
-  // Unique camera id.
-  int camera_id;
-  
-  // Name of the distortion model. Determines the number of parameters.
-  std::string model_name;
-  
-  // Image width in pixels.
-  int width;
-  
-  // Image height in pixels.
-  int height;
-  
-  // Distortion parameters. Their number and interpretation depends on the
-  // distortion model.
-  std::vector<double> parameters;
+    // Unique camera id.
+    int camera_id;
+
+    // Name of the distortion model. Determines the number of parameters.
+    std::string model_name;
+
+    // Image width in pixels.
+    int width;
+
+    // Image height in pixels.
+    int height;
+
+    // Distortion parameters. Their number and interpretation depends on the
+    // distortion model.
+    std::vector<double> parameters;
 };
 
 typedef std::shared_ptr<ColmapCamera> ColmapCameraPtr;
@@ -62,10 +62,8 @@ typedef std::shared_ptr<const ColmapCamera> ColmapCameraConstPtr;
 typedef std::vector<ColmapCameraPtr> ColmapCameraPtrVector;
 typedef std::unordered_map<int, ColmapCameraPtr> ColmapCameraPtrMap;
 
-
 // Loads ColmapCameraPtr from a COLMAP cameras.txt file and appends
 // them to the cameras map (indexed by camera_id). Returns true if successful.
-bool ReadColmapCameras(const std::string& cameras_txt_path,
-                       ColmapCameraPtrMap* cameras);
+bool ReadColmapCameras(const std::string &cameras_txt_path, ColmapCameraPtrMap *cameras);
 
 #endif

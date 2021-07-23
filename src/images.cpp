@@ -30,51 +30,42 @@
 
 #include <fstream>
 
-bool ReadColmapImages(const std::string& images_txt_path,
-                      bool read_observations,
-                      ColmapImagePtrMap* images) {
-  std::ifstream images_file_stream(images_txt_path, std::ios::in);
-  if (!images_file_stream) {
-    return false;
-  }
-  while (!images_file_stream.eof() && !images_file_stream.bad()) {
-    std::string line;
-    std::getline(images_file_stream, line);
-    if (line.size() == 0 || line[0] == '#') {
-      continue;
+bool ReadColmapImages(const std::string &images_txt_path, bool read_observations, ColmapImagePtrMap *images) {
+    std::ifstream images_file_stream(images_txt_path, std::ios::in);
+    if (!images_file_stream) {
+        return false;
     }
-    
-    // Read image info line.
-    ColmapImage* new_image = new ColmapImage();
-    Eigen::Quaternionf image_R_global;
-    std::istringstream image_stream(line);
-    image_stream >> new_image->image_id
-                 >> image_R_global.w()
-                 >> image_R_global.x()
-                 >> image_R_global.y()
-                 >> image_R_global.z()
-                 >> new_image->image_T_global.translation()[0]
-                 >> new_image->image_T_global.translation()[1]
-                 >> new_image->image_T_global.translation()[2]
-                 >> new_image->camera_id
-                 >> new_image->file_path;
-    new_image->image_T_global.linear() = image_R_global.toRotationMatrix();
-    new_image->global_T_image = new_image->image_T_global.inverse();
-    
-    // Read feature observations line.
-    std::getline(images_file_stream, line);
-    if (read_observations) {
-      std::istringstream observations_stream(line);
-      while (!observations_stream.eof() && !observations_stream.bad()) {
-        new_image->observations.emplace_back();
-        ColmapFeatureObservation* new_observation = &new_image->observations.back();
-        observations_stream >> new_observation->xy.x()
-                            >> new_observation->xy.y()
-                            >> new_observation->point3d_id;
-      }
+    while (!images_file_stream.eof() && !images_file_stream.bad()) {
+        std::string line;
+        std::getline(images_file_stream, line);
+        if (line.size() == 0 || line[0] == '#') {
+            continue;
+        }
+
+        // Read image info line.
+        ColmapImage *new_image = new ColmapImage();
+        Eigen::Quaternionf image_R_global;
+        std::istringstream image_stream(line);
+        image_stream >> new_image->image_id >> image_R_global.w() >> image_R_global.x() >> image_R_global.y() >>
+            image_R_global.z() >> new_image->image_T_global.translation()[0] >>
+            new_image->image_T_global.translation()[1] >> new_image->image_T_global.translation()[2] >>
+            new_image->camera_id >> new_image->file_path;
+        new_image->image_T_global.linear() = image_R_global.toRotationMatrix();
+        new_image->global_T_image = new_image->image_T_global.inverse();
+
+        // Read feature observations line.
+        std::getline(images_file_stream, line);
+        if (read_observations) {
+            std::istringstream observations_stream(line);
+            while (!observations_stream.eof() && !observations_stream.bad()) {
+                new_image->observations.emplace_back();
+                ColmapFeatureObservation *new_observation = &new_image->observations.back();
+                observations_stream >> new_observation->xy.x() >> new_observation->xy.y() >>
+                    new_observation->point3d_id;
+            }
+        }
+
+        images->insert(std::make_pair(new_image->image_id, ColmapImagePtr(new_image)));
     }
-    
-    images->insert(std::make_pair(new_image->image_id, ColmapImagePtr(new_image)));
-  }
-  return true;
+    return true;
 }

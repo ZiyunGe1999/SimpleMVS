@@ -1,6 +1,6 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.7)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.8)
 
-project(SimpleMVS)
+project(SimpleMVS LANGUAGES CXX CUDA)
 
 SET(CMAKE_BUILD_TYPE "Debug")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -9,6 +9,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 find_package(glog 0.4.0 REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(PCL REQUIRED)
 
 message(STATUS "======================================================================")
 message(STATUS "----------------Eigen is at " ${EIGEN3_INCLUDE_DIRS})
@@ -68,3 +69,13 @@ target_link_libraries(SimpleMVS_run
     MVSProcess
 )
 # --------------------------------------------
+
+function(print_include_directories)
+    get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+    message(STATUS "all include directories:")
+    foreach(dir ${dirs})
+        message(STATUS "-   ${dir}")
+    endforeach()
+endfunction()
+
+print_include_directories()

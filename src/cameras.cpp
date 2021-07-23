@@ -30,31 +30,28 @@
 
 #include <fstream>
 
-bool ReadColmapCameras(const std::string& cameras_txt_path,
-                       ColmapCameraPtrMap* cameras) {
-  std::ifstream cameras_file_stream(cameras_txt_path, std::ios::in);
-  if (!cameras_file_stream) {
-    return false;
-  }
-  
-  while (!cameras_file_stream.eof() && !cameras_file_stream.bad()) {
-    std::string line;
-    std::getline(cameras_file_stream, line);
-    if (line.size() == 0 || line[0] == '#') {
-      continue;
+bool ReadColmapCameras(const std::string &cameras_txt_path, ColmapCameraPtrMap *cameras) {
+    std::ifstream cameras_file_stream(cameras_txt_path, std::ios::in);
+    if (!cameras_file_stream) {
+        return false;
     }
-    
-    ColmapCamera* new_camera = new ColmapCamera();
-    std::istringstream line_stream(line);
-    line_stream >> new_camera->camera_id >> new_camera->model_name
-                >> new_camera->width >> new_camera->height;
-    while (!line_stream.eof() && !line_stream.bad()) {
-      new_camera->parameters.emplace_back();
-      line_stream >> new_camera->parameters.back();
+
+    while (!cameras_file_stream.eof() && !cameras_file_stream.bad()) {
+        std::string line;
+        std::getline(cameras_file_stream, line);
+        if (line.size() == 0 || line[0] == '#') {
+            continue;
+        }
+
+        ColmapCamera *new_camera = new ColmapCamera();
+        std::istringstream line_stream(line);
+        line_stream >> new_camera->camera_id >> new_camera->model_name >> new_camera->width >> new_camera->height;
+        while (!line_stream.eof() && !line_stream.bad()) {
+            new_camera->parameters.emplace_back();
+            line_stream >> new_camera->parameters.back();
+        }
+
+        cameras->insert(std::make_pair(new_camera->camera_id, ColmapCameraPtr(new_camera)));
     }
-    
-    cameras->insert(std::make_pair(new_camera->camera_id,
-                                   ColmapCameraPtr(new_camera)));
-  }
-  return true;
+    return true;
 }
