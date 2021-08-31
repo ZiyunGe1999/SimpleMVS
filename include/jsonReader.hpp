@@ -21,6 +21,7 @@ class jsonFileReader {
     std::string getImageDirPath();
     std::string getPoseFilePath();
     std::string getCameraCalibrationFilePath();
+    std::string getOutputDirectoryPath();
     Json::Value JsonParser(const std::string fileName);
     SetParameters getUserSetParameters();
 };

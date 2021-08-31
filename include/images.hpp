@@ -67,6 +67,8 @@ struct ColmapImage {
     // Path to the image file, may be a relative path.
     std::string file_path;
 
+    Eigen::Vector3f position;
+
     // Global-to-image transformation.
     SE3f image_T_global;
 
@@ -87,6 +89,6 @@ typedef std::map<int, ColmapImagePtr>
 
 // Loads ColmapImagePtr from a COLMAP images.txt file and appends them
 // to the images map (indexed by image_id). Returns true if successful.
-bool ReadColmapImages(const std::string &images_txt_path, bool read_observations, ColmapImagePtrMap *cameras);
+bool ReadColmapImages(const std::string &images_txt_path, bool read_observations, ColmapImagePtrMap &images);
 
 #endif

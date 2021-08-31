@@ -29,8 +29,9 @@
 #include "images.hpp"
 
 #include <fstream>
+#include <iostream>
 
-bool ReadColmapImages(const std::string &images_txt_path, bool read_observations, ColmapImagePtrMap *images) {
+bool ReadColmapImages(const std::string &images_txt_path, bool read_observations, ColmapImagePtrMap &images) {
     std::ifstream images_file_stream(images_txt_path, std::ios::in);
     if (!images_file_stream) {
         return false;
@@ -43,7 +44,7 @@ bool ReadColmapImages(const std::string &images_txt_path, bool read_observations
         }
 
         // Read image info line.
-        ColmapImage *new_image = new ColmapImage();
+        ColmapImagePtr new_image(new ColmapImage());
         Eigen::Quaternionf image_R_global;
         std::istringstream image_stream(line);
         image_stream >> new_image->image_id >> image_R_global.w() >> image_R_global.x() >> image_R_global.y() >>
@@ -51,7 +52,9 @@ bool ReadColmapImages(const std::string &images_txt_path, bool read_observations
             new_image->image_T_global.translation()[1] >> new_image->image_T_global.translation()[2] >>
             new_image->camera_id >> new_image->file_path;
         new_image->image_T_global.linear() = image_R_global.toRotationMatrix();
+        // std::cout << new_image->image_T_global.translation().transpose() << std::endl;
         new_image->global_T_image = new_image->image_T_global.inverse();
+        // std::cout << new_image->global_T_image.translation().transpose() << std::endl;
 
         // Read feature observations line.
         std::getline(images_file_stream, line);
@@ -65,7 +68,20 @@ bool ReadColmapImages(const std::string &images_txt_path, bool read_observations
             }
         }
 
-        images->insert(std::make_pair(new_image->image_id, ColmapImagePtr(new_image)));
+        // std::cout << "new_image count " << new_image.use_count() << std::endl;
+        images[new_image->image_id] = new_image;
+        // std::cout << "new_image count " << new_image.use_count() << std::endl;
+        // images.insert(std::make_pair(new_image->image_id, new_image));
+        // std::cout << images[new_image->image_id]->global_T_image.translation().transpose() << std::endl << std::endl;
     }
+
+    // if (!images->empty()) {
+    //     SE3f globalnew_T_global = images->begin()->second->image_T_global;
+    //     SE3f global_T_globalnew = images->begin()->second->global_T_image;
+    //     for (auto &image : *images) {
+    //         image.second->global_T_image = globalnew_T_global * image.second->global_T_image;
+    //         image.second->image_T_global = image.second->image_T_global * global_T_globalnew;
+    //     }
+    // }
     return true;
 }

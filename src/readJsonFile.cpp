@@ -39,9 +39,17 @@ std::string jsonFileReader::getCameraCalibrationFilePath() {
     return cameraCalibrationFilePath;
 }
 
+std::string jsonFileReader::getOutputDirectoryPath() {
+    std::string output_directory = root["OutputDirectory"].asString();
+    return output_directory;
+}
+
 SetParameters jsonFileReader::getUserSetParameters() {
     SetParameters user_set_parameters;
     user_set_parameters.max_z_ = root["parameters"]["max_z"].asDouble();
     user_set_parameters.min_z_ = root["parameters"]["min_z"].asDouble();
+    user_set_parameters.zoom = root["parameters"]["zoom"].asFloat();
+    user_set_parameters.patch_length = root["parameters"]["patch_length"].asInt();
+    user_set_parameters.patch_step = root["parameters"]["patch_step"].asInt();
     return user_set_parameters;
 }

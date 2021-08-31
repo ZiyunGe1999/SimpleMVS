@@ -36,21 +36,38 @@ int main(int argc, char **argv) {
     if (success) {
         LOG(INFO) << "Successfully loaded " << cameras.size() << " camera(s).";
     } else {
-        LOG(FATAL) << "Error: could not load cameras." << std::endl;
+        LOG(FATAL) << "Error: could not load cameras.";
     }
 
     // Load images (indexed by: image_id).
     ColmapImagePtrMap images;
     std::string images_txt_path = config_file_reader.getPoseFilePath();
-    success = ReadColmapImages(images_txt_path, /* read_observations */ true, &images);
+    success = ReadColmapImages(images_txt_path, /* read_observations */ true, images);
     if (success) {
-        LOG(INFO) << "Successfully loaded " << images.size() << " image info(s)." << std::endl;
+        LOG(INFO) << "Successfully loaded " << images.size() << " image info(s).";
     } else {
-        LOG(FATAL) << "Error: could not load image infos." << std::endl;
+        LOG(FATAL) << "Error: could not load image infos.";
     }
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pose_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+    for (auto &image : images) {
+        // LOG(INFO) << image.first;
+        Eigen::Vector3f position = image.second->global_T_image.translation();
+        // LOG(INFO) << position.transpose();
+        pcl::PointXYZRGB p;
+        p.x = position[0];
+        p.y = position[1];
+        p.z = position[2];
+        p.r = 0;
+        p.g = 0;
+        p.b = 0;
+        pose_cloud->push_back(p);
+    }
+    pcl::io::savePCDFileASCII(config_file_reader.getOutputDirectoryPath() + "/pose_cloud.pcd", *pose_cloud);
+    // exit(0);
 
     // MVS Main Process
-    MVSProcess simple_mvs_process(config_file_reader.getImageDirPath(), set_parameters, cameras);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+    MVSProcess simple_mvs_process(config_file_reader.getImageDirPath(), set_parameters, cameras, cloud);
     for (auto iter = images.begin(); iter != images.end(); iter++) {
         LOG(INFO) << "=================================================================================";
         LOG(INFO) << "Update frames for simple mvs process";
@@ -59,6 +76,24 @@ int main(int argc, char **argv) {
 
         LOG(INFO) << "---------------------------------------------------------------------------------";
         simple_mvs_process.initializePlanes();
+
+        LOG(INFO) << "---------------------------------------------------------------------------------";
+        simple_mvs_process.planePropagation();
+
+        LOG(INFO) << "---------------------------------------------------------------------------------";
+        simple_mvs_process.checkConsistency();
+
+        if (iter->first >= 3) {
+            break;
+        }
+    }
+
+    std::string pcd_filename = config_file_reader.getOutputDirectoryPath() + "/mvs_result.pcd";
+    if (cloud->empty()) {
+        LOG(INFO) << "There is no point in the cloud";
+    } else {
+        LOG(INFO) << "Saving point cloud at " << pcd_filename;
+        pcl::io::savePCDFileASCII(pcd_filename, *cloud);
     }
 
     return 0;

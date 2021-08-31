@@ -1,0 +1,13 @@
+{
+    "ImageDir": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/observatory/images",
+    "PoseFile": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/observatory/dslr_calibration_undistorted/images.txt",
+    "CamCalibration": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/observatory/dslr_calibration_undistorted/cameras.txt",
+    "OutputDirectory": "/home/ziyunge/Documents/SimpleMVS/Datasets/Datasets/observatory/output",
+    "parameters": {
+        "max_z": 20,
+        "min_z": 1,
+        "zoom": 0.25,
+        "patch_length": 10,
+        "patch_step": 2
+    }
+}
