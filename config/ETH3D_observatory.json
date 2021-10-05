@@ -7,7 +7,7 @@
         "max_z": 20,
         "min_z": 1,
         "zoom": 0.25,
-        "patch_length": 10,
+        "patch_length": 14,
         "patch_step": 2
     }
 }

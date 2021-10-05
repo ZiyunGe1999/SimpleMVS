@@ -3,8 +3,8 @@
 MVSFrame::MVSFrame(int id, std::string image_root_path, ColmapImagePtrMap &map, float zoom) : image_id(id) {
     ColmapImagePtr image_ptr = map[image_id];
     camera_id = image_ptr->camera_id;
-    LOG(INFO) << "camera_id: " << camera_id;
-    LOG(INFO) << "image_T_global: " << image_T_global.matrix();
+    // LOG(INFO) << "camera_id: " << camera_id;
+    // LOG(INFO) << "image_T_global: " << image_T_global.matrix();
     // image_T_global = image_ptr->image_T_global;
     image_T_global.linear() = image_ptr->image_T_global.linear();
     image_T_global.translation() = image_ptr->image_T_global.translation();
@@ -183,7 +183,6 @@ float MVSProcess::calculateProjectionCost(Eigen::Vector3d view_vector, MVSPlane 
         float val_cost = 1.f - expf(-valdiff / gamma);
         float grad_cost = 1.f - expf(-graddiff / gamma);
         float alpha = 0.3f;
-        // LOG(INFO) << "found projection";
         return alpha * val_cost + (1.f - alpha) * grad_cost;
     } else {
         return NON_OBSERVABLE_COST;
@@ -246,7 +245,8 @@ void MVSProcess::saveAsDepthImage(std::shared_ptr<MVSFrame> frame_ptr, std::stri
 void MVSProcess::refinePlane(size_t i, size_t j, float cost) {
     MVSPlane plane = frame_ptr_2->planes[i][j];
     Eigen::Vector3d cur_view_vector = getViewVector(frame_ptr_2->camera_id, i, j);
-    float depth = (cur_view_vector * (-plane.w / cur_view_vector.dot(plane.vector()))).norm();
+    // float depth = (cur_view_vector * (-plane.w / cur_view_vector.dot(plane.vector()))).norm();
+    float depth = (cur_view_vector * (-plane.w / cur_view_vector.dot(plane.vector())))[2];
     Eigen::Vector3d plane_normalized_vector = plane.getNormalizedVector();
     float depth_range = 5;
     double vector_range = 1;
@@ -257,18 +257,33 @@ void MVSProcess::refinePlane(size_t i, size_t j, float cost) {
     // std::uniform_real_distribution<double> dis_for_vector(-1.0, 1.0);
     // float cost = FLT_MAX;
     while (depth_range > 0.05) {
-        std::uniform_real_distribution<float> dis_for_depth(depth - depth_range, depth + depth_range);
+        float random_depth_min =
+            (depth - depth_range) > set_parameters_.min_z_ ? depth - depth_range : set_parameters_.min_z_;
+        float random_depth_max =
+            (depth + depth_range) < set_parameters_.max_z_ ? depth + depth_range : set_parameters_.max_z_;
+        if (depth < set_parameters_.min_z_) {
+            random_depth_min = set_parameters_.min_z_;
+            random_depth_max = set_parameters_.min_z_ + depth_range;
+        } else if (depth > set_parameters_.max_z_) {
+            random_depth_min = set_parameters_.max_z_ - depth_range;
+            random_depth_max = set_parameters_.max_z_;
+        }
+        std::uniform_real_distribution<float> dis_for_depth(random_depth_min, random_depth_max);
+        float random_depth = dis_for_depth(gen);
         // std::uniform_real_distribution<double> dis_for_vector(-vector_range, vector_range);
-        float random_depth = std::max<float>(dis_for_depth(gen), set_parameters_.min_z_);
-        random_depth = std::min<float>(random_depth, set_parameters_.max_z_);
+        // float random_depth = std::max<float>(dis_for_depth(gen), set_parameters_.min_z_);
+        // random_depth = std::min<float>(random_depth, set_parameters_.max_z_);
         Eigen::Vector3d random_vector =
             plane_normalized_vector + Eigen::Vector3d(dis_for_vector(gen), dis_for_vector(gen), dis_for_vector(gen));
         random_vector.normalize();
+        if (random_vector.dot(cur_view_vector) > 0) {
+            random_vector = -random_vector;
+        }
         MVSPlane random_plane;
         random_plane.x = random_vector[0];
         random_plane.y = random_vector[1];
         random_plane.z = random_vector[2];
-        random_plane.w = -(depth * cur_view_vector.normalized()).dot(random_vector);
+        random_plane.w = -(depth * cur_view_vector).dot(random_vector);
         float cost_candidate = calculatePlaneProjectionCost(i, j, random_plane);
         if (cost_candidate < cost) {
             cost = cost_candidate;
@@ -307,15 +322,18 @@ void MVSProcess::planePropagation() {
         LOG(INFO) << "frame_ptr_2 is empty, pass!";
     } else {
         LOG(INFO) << "start plane propagation for frame_ptr_2 whose actual image_id is " << frame_ptr_2->image_id;
-        LOG(INFO) << "image size for frame_ptr_2: (" << frame_ptr_2->rows() << ", " << frame_ptr_2->cols() << ")";
-        saveAsDepthImage(frame_ptr_2, "/home/ziyunge/before_propagation.jpg");
+        clock_t start_time = std::clock();
+        // LOG(INFO) << "image size for frame_ptr_2: (" << frame_ptr_2->rows() << ", " << frame_ptr_2->cols() << ")";
+        saveAsDepthImage(frame_ptr_2,
+                         "/home/ziyunge/" + std::to_string(frame_ptr_2->image_id) + "_before_propagation.jpg");
         if (frame_ptr_1) {
             propagatePlanesFromPreviousFrame();
         }
         for (int loop_time = 0; loop_time < 3; loop_time++) {
+            clock_t time_in_loop = std::clock();
             for (size_t i = 1; i < frame_ptr_2->rows() - 1; i++) {
                 for (size_t j = 1; j < frame_ptr_2->cols() - 1; j++) {
-                    LOG(INFO) << "Processing (" << i << ", " << j << ")";
+                    // LOG(INFO) << "Processing (" << i << ", " << j << ")";
                     // float val = frame_ptr_2->pixels.at<uchar>(i, j);
                     // LOG(INFO) << val;
                     // float grad_horizon =
@@ -330,10 +348,9 @@ void MVSProcess::planePropagation() {
                     float cost_candidate;
 
                     // for (int offseti = -set_parameters_.patch_length; offseti <= 0;
-                    //      offseti += set_parameters_.patch_step) {
-                    //     for (int offsetj = -set_parameters_.patch_length; offsetj <=
-                    //     int(set_parameters_.patch_length);
-                    //          offsetj += set_parameters_.patch_step) {
+                    //      offseti += set_parameters_.patch_step * 2) {
+                    //     for (int offsetj = -set_parameters_.patch_length; offsetj <= set_parameters_.patch_length;
+                    //          offsetj += set_parameters_.patch_step * 2) {
                     //         if (offseti <= 1 && offseti >= -1 && offsetj <= 1 && offsetj >= -1) {
                     //             continue;
                     //         }
@@ -349,6 +366,28 @@ void MVSProcess::planePropagation() {
                     //             cost = cost_candidate;
                     //             frame_ptr_2->planes[i][j] = plane;
                     //         }
+                    //     }
+                    // }
+
+                    // srand((unsigned)time(NULL));
+                    // for (int random_try = 0; random_try < 5; random_try++) {
+                    //     int offseti = 0;
+                    //     int offsetj = 0;
+                    //     while (offseti >= -1 && offseti <= 1 && offsetj >= -1 && offsetj <= 1) {
+                    //         offseti = rand() % (set_parameters_.patch_length + 1) - set_parameters_.patch_length;
+                    //         offsetj = rand() % (2 * set_parameters_.patch_length + 1) - set_parameters_.patch_length;
+                    //     }
+                    //     int selected_i = i + offseti;
+                    //     int selected_j = j + offsetj;
+                    //     if (selected_i < 0 || selected_i >= frame_ptr_2->rows() || selected_j < 0 ||
+                    //         selected_j >= frame_ptr_2->cols()) {
+                    //         continue;
+                    //     }
+                    //     plane = frame_ptr_2->planes[selected_i][selected_j];
+                    //     cost_candidate = calculatePlaneProjectionCost(i, j, plane);
+                    //     if (cost_candidate < cost) {
+                    //         cost = cost_candidate;
+                    //         frame_ptr_2->planes[i][j] = plane;
                     //     }
                     // }
 
@@ -373,12 +412,12 @@ void MVSProcess::planePropagation() {
                     refinePlane(i, j, cost);
                 }
             }
-            saveAsDepthImage(frame_ptr_2,
-                             "/home/ziyunge/after_forward_propagation_" + std::to_string(loop_time) + ".jpg");
+            saveAsDepthImage(frame_ptr_2, "/home/ziyunge/" + std::to_string(frame_ptr_2->image_id) +
+                                              "_after_forward_propagation_" + std::to_string(loop_time) + ".jpg");
 
             for (size_t i = frame_ptr_2->rows() - 2; i >= 1; i--) {
                 for (size_t j = frame_ptr_2->cols() - 2; j >= 1; j--) {
-                    LOG(INFO) << "Processing (" << i << ", " << j << ")";
+                    // LOG(INFO) << "Processing (" << i << ", " << j << ")";
                     // float val = frame_ptr_2->pixels.at<uchar>(i, j);
                     // LOG(INFO) << val;
                     // float grad_horizon =
@@ -392,11 +431,10 @@ void MVSProcess::planePropagation() {
                     float cost = calculatePlaneProjectionCost(i, j, plane);
                     float cost_candidate;
 
-                    // for (int offseti = 0; offseti <= int(set_parameters_.patch_length);
-                    //      offseti += set_parameters_.patch_step) {
-                    //     for (int offsetj = -set_parameters_.patch_length; offsetj <=
-                    //     int(set_parameters_.patch_length);
-                    //          offsetj += set_parameters_.patch_step) {
+                    // for (int offseti = 0; offseti <= set_parameters_.patch_length;
+                    //      offseti += set_parameters_.patch_step * 2) {
+                    //     for (int offsetj = -set_parameters_.patch_length; offsetj <= set_parameters_.patch_length;
+                    //          offsetj += set_parameters_.patch_step * 2) {
                     //         if (offseti <= 1 && offseti >= -1 && offsetj <= 1 && offsetj >= -1) {
                     //             continue;
                     //         }
@@ -412,6 +450,28 @@ void MVSProcess::planePropagation() {
                     //             cost = cost_candidate;
                     //             frame_ptr_2->planes[i][j] = plane;
                     //         }
+                    //     }
+                    // }
+
+                    // srand((unsigned)time(NULL));
+                    // for (int random_try = 0; random_try < 5; random_try++) {
+                    //     int offseti = 0;
+                    //     int offsetj = 0;
+                    //     while (offseti >= -1 && offseti <= 1 && offsetj >= -1 && offsetj <= 1) {
+                    //         offseti = rand() % (set_parameters_.patch_length + 1);
+                    //         offsetj = rand() % (2 * set_parameters_.patch_length + 1) - set_parameters_.patch_length;
+                    //     }
+                    //     int selected_i = i + offseti;
+                    //     int selected_j = j + offsetj;
+                    //     if (selected_i < 0 || selected_i >= frame_ptr_2->rows() || selected_j < 0 ||
+                    //         selected_j >= frame_ptr_2->cols()) {
+                    //         continue;
+                    //     }
+                    //     plane = frame_ptr_2->planes[selected_i][selected_j];
+                    //     cost_candidate = calculatePlaneProjectionCost(i, j, plane);
+                    //     if (cost_candidate < cost) {
+                    //         cost = cost_candidate;
+                    //         frame_ptr_2->planes[i][j] = plane;
                     //     }
                     // }
 
@@ -436,10 +496,14 @@ void MVSProcess::planePropagation() {
                     refinePlane(i, j, cost);
                 }
             }
-            saveAsDepthImage(frame_ptr_2,
-                             "/home/ziyunge/after_backward_propagation_" + std::to_string(loop_time) + ".jpg");
+            saveAsDepthImage(frame_ptr_2, "/home/ziyunge/" + std::to_string(frame_ptr_2->image_id) +
+                                              "_after_backward_propagation_" + std::to_string(loop_time) + ".jpg");
             // exit(0);
+            LOG(INFO) << "Loop " + std::to_string(loop_time) + " ended. The elapsed time is "
+                      << (std::clock() - time_in_loop) * 1.0 / CLOCKS_PER_SEC / 60.0 << " min(s)";
         }
+        LOG(INFO) << "Finished plane propagation. The elapsed time is "
+                  << (std::clock() - start_time) * 1.0 / CLOCKS_PER_SEC / 60.0 << " min(s)";
     }
 }
 
@@ -449,6 +513,7 @@ void MVSProcess::checkConsistency() {
     } else {
         LOG(INFO) << "start check consistency for frame_ptr_2 whose actual image_id is " << frame_ptr_2->image_id
                   << ". The reference image_id is " << frame_ptr_1->image_id;
+        clock_t start_time = std::clock();
         for (size_t i = 0; i < frame_ptr_2->rows(); i++) {
             for (size_t j = 0; j < frame_ptr_2->cols(); j++) {
                 Eigen::Vector3d cur_view_vector = getViewVector(frame_ptr_2->camera_id, i, j);
@@ -484,5 +549,7 @@ void MVSProcess::checkConsistency() {
                 }
             }
         }
+        LOG(INFO) << "Finished check consistency. The elapsed time is "
+                  << (std::clock() - start_time) * 1.0 / CLOCKS_PER_SEC << " second(s)";
     }
 }

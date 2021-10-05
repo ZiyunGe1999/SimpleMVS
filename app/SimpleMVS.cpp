@@ -83,9 +83,9 @@ int main(int argc, char **argv) {
         LOG(INFO) << "---------------------------------------------------------------------------------";
         simple_mvs_process.checkConsistency();
 
-        if (iter->first >= 3) {
-            break;
-        }
+        // if (iter->first >= 3) {
+        //     break;
+        // }
     }
 
     std::string pcd_filename = config_file_reader.getOutputDirectoryPath() + "/mvs_result.pcd";
